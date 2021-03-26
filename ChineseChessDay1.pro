@@ -13,8 +13,10 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        MyWidget.cpp
+        MyWidget.cpp \
+    Board.cpp
 
-HEADERS  += MyWidget.h
+HEADERS  += MyWidget.h \
+    Board.h
 
 FORMS    += MyWidget.ui
