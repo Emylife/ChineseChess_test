@@ -2,6 +2,7 @@
 #define BOARD_H
 
 #include <QWidget>
+#include"Stone.h"
 
 class Board : public QWidget
 {
@@ -10,7 +11,14 @@ public:
     explicit Board(QWidget *parent = 0);
     ~Board();
 
+    void Init();
     void paintEvent(QPaintEvent *);
+    void drawStones(QPainter &painter, int i);
+    QPoint center(int col, int row);
+
+private:
+    Stone mStones[32];
+    int d;
 
 signals:
 
