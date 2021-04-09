@@ -68,6 +68,11 @@ void Board::paintEvent(QPaintEvent *)
 
 void Board::drawStones(QPainter &painter, int i)
 {
+    if(mStones[i].mIsDead)
+    {
+        return;
+    }
+
     QPoint c = center(mStones[i].mColumn, mStones[i].mRow);
 
     if(mSelectedId == i)
@@ -102,17 +107,43 @@ void Board::mouseReleaseEvent(QMouseEvent *ev)
 //    cout<<"d = "<<d<<endl;
 //    cout<<"col = "<<col<<endl;
 //    cout<<"row = "<<row<<endl;
+//    cout<<"mSelectedId = "<<mSelectedId<<endl;
 
-    //选中棋子，判断鼠标是否点击在棋盘内
+    //判断鼠标是否点击在棋盘内
     if(0<=col && col<=8 && 0<=row && row<=9)
     {
-        for(int i=0; i<32; ++i)
+        int i=0;
+        for(; i<32; ++i)
         {
-            if(mStones[i].mColumn == col && mStones[i].mRow == row)
+            if(mStones[i].mColumn == col && mStones[i].mRow == row && !mStones[i].mIsDead)  //正好点击到了棋盘内的一颗棋子
             {
-                mSelectedId = i;
+                if(mSelectedId == -1) //未选中棋子，那么选中该棋子
+                {
+                    mSelectedId = i;
+                }
+                else //之前就已选中棋子，那么吃掉现在点击位置的棋子
+                {
+                    mStones[i].mIsDead = true;
+                    mStones[mSelectedId].mColumn = col;
+                    mStones[mSelectedId].mRow = row;
+                    mSelectedId = -1;
+                }
                 update();
                 break;
+            }
+        }
+        if(i == 32) //点击的位置没有棋子
+        {
+            if(mSelectedId == -1)  //之前没有选中棋子，现在又点击空白位置，那么直接返回
+            {
+                return;
+            }
+            else   //之前已经选中了棋子，现在又点击了空白位置，那么把选中的棋子走到现在点击的位置上
+            {
+                mStones[mSelectedId].mColumn = col;
+                mStones[mSelectedId].mRow = row;
+                mSelectedId = -1;
+                update();
             }
         }
     }
