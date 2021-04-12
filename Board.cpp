@@ -110,45 +110,82 @@ void Board::mouseReleaseEvent(QMouseEvent *ev)
 //    cout<<"mSelectedId = "<<mSelectedId<<endl;
 
     //判断鼠标是否点击在棋盘内
-    if(0<=col && col<=8 && 0<=row && row<=9)
-    {
-        int i=0;
-        for(; i<32; ++i)
-        {
-            if(mStones[i].mColumn == col && mStones[i].mRow == row && !mStones[i].mIsDead)  //正好点击到了棋盘内的一颗棋子
-            {
-                if(mSelectedId == -1) //未选中棋子，那么选中该棋子
-                {
-                    mSelectedId = i;
-                }
-                else //之前就已选中棋子，那么吃掉现在点击位置的棋子
-                {
-                    mStones[i].mIsDead = true;
-                    mStones[mSelectedId].mColumn = col;
-                    mStones[mSelectedId].mRow = row;
-                    mSelectedId = -1;
-                }
-                update();
-                break;
-            }
-        }
-        if(i == 32) //点击的位置没有棋子
-        {
-            if(mSelectedId == -1)  //之前没有选中棋子，现在又点击空白位置，那么直接返回
-            {
-                return;
-            }
-            else   //之前已经选中了棋子，现在又点击了空白位置，那么把选中的棋子走到现在点击的位置上
-            {
-                mStones[mSelectedId].mColumn = col;
-                mStones[mSelectedId].mRow = row;
-                mSelectedId = -1;
-                update();
-            }
-        }
-    }
-    else
+//    if(0<=col && col<=8 && 0<=row && row<=9)
+//    {
+//        int i=0;
+//        for(; i<32; ++i)
+//        {
+//            if(mStones[i].mColumn == col && mStones[i].mRow == row && !mStones[i].mIsDead)  //正好点击到了棋盘内的一颗棋子
+//            {
+//                if(mSelectedId == -1) //未选中棋子，那么选中该棋子
+//                {
+//                    mSelectedId = i;
+//                }
+//                else //之前就已选中棋子，那么吃掉现在点击位置的棋子
+//                {
+//                    mStones[i].mIsDead = true;
+//                    mStones[mSelectedId].mColumn = col;
+//                    mStones[mSelectedId].mRow = row;
+//                    mSelectedId = -1;
+//                }
+//                update();
+//                break;
+//            }
+//        }
+//        if(i == 32) //点击的位置没有棋子
+//        {
+//            if(mSelectedId == -1)  //之前没有选中棋子，现在又点击空白位置，那么直接返回
+//            {
+//                return;
+//            }
+//            else   //之前已经选中了棋子，现在又点击了空白位置，那么把选中的棋子走到现在点击的位置上
+//            {
+//                mStones[mSelectedId].mColumn = col;
+//                mStones[mSelectedId].mRow = row;
+//                mSelectedId = -1;
+//                update();
+//            }
+//        }
+//    }
+//    else
+//    {
+//        return;
+//    }
+    if(!(0<=col && col<=8 && 0<=row && row<=9))
     {
         return;
+    }
+    int i=0;
+    for(; i<32; ++i)
+    {
+        if(mStones[i].mColumn == col && mStones[i].mRow == row && !mStones[i].mIsDead)  //正好点击到了棋盘内的一颗棋子
+        {
+            break;
+        }
+    }
+    if(mSelectedId == -1)  //之前未选中棋子
+    {
+        if(i < 32)
+        {
+            mSelectedId = i; //之前未选中棋子,选中棋子
+            update();
+        }
+        return;       //之前未选中棋子,点击到空白的地方，直接返回
+    }
+    else  //之前就已经选中棋子
+    {
+        if(i < 32) //之前就已经选中棋子,现在点击的位置正好有一颗棋子,那么吃掉该棋子
+        {
+            mStones[i].mIsDead = true;
+            mStones[mSelectedId].mColumn = col;
+            mStones[mSelectedId].mRow = row;
+        }
+        else //之前已经选中了棋子，现在又点击了空白位置，那么把选中的棋子走到现在点击的位置上
+        {
+            mStones[mSelectedId].mColumn = col;
+            mStones[mSelectedId].mRow = row;
+        }
+        mSelectedId = -1;
+        update();
     }
 }
