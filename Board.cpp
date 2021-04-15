@@ -2,6 +2,7 @@
 #include<QPainter>
 #include"Stone.h"
 #include<iostream>
+#include<math.h>
 
 using namespace std;
 
@@ -28,6 +29,7 @@ void Board::Init()
     }
     this->d = 2*mStones[0].mRadius;
     this->mSelectedId = -1;
+    this->mIsRedTurn = true;
 }
 
 void Board::paintEvent(QPaintEvent *)
@@ -167,25 +169,194 @@ void Board::mouseReleaseEvent(QMouseEvent *ev)
     {
         if(i < 32)
         {
-            mSelectedId = i; //之前未选中棋子,选中棋子
+            if(mIsRedTurn == mStones[i].mIsRed)
+            {
+                mSelectedId = i; //之前未选中棋子,选中棋子
+                update();
+            }
+        }
+    }
+    else  //之前就已经选中棋子，那么走棋
+    {
+        if(canMove(mSelectedId, row, col, i))
+        {
+            if(i < 32) //之前就已经选中棋子,现在点击的位置正好有一颗棋子,那么吃掉该棋子
+            {
+                mStones[i].mIsDead = true;
+            }
+            //之前已经选中了棋子，现在又点击了空白位置，那么把选中的棋子走到现在点击的位置上
+            mStones[mSelectedId].mColumn = col;
+            mStones[mSelectedId].mRow = row;
+            mSelectedId = -1;
+            mIsRedTurn = !mIsRedTurn;
             update();
         }
-        return;       //之前未选中棋子,点击到空白的地方，直接返回
     }
-    else  //之前就已经选中棋子
+}
+
+bool Board::canMove(int moveId, int row, int col, int killId)
+{
+    if(moveId == killId)
     {
-        if(i < 32) //之前就已经选中棋子,现在点击的位置正好有一颗棋子,那么吃掉该棋子
-        {
-            mStones[i].mIsDead = true;
-            mStones[mSelectedId].mColumn = col;
-            mStones[mSelectedId].mRow = row;
-        }
-        else //之前已经选中了棋子，现在又点击了空白位置，那么把选中的棋子走到现在点击的位置上
-        {
-            mStones[mSelectedId].mColumn = col;
-            mStones[mSelectedId].mRow = row;
-        }
-        mSelectedId = -1;
-        update();
+        return false;
     }
+    if(mStones[moveId].mIsRed == mStones[killId].mIsRed)
+    {
+        mSelectedId = killId;
+        update();
+        return false;
+    }
+    switch (mStones[moveId].mType)
+    {
+    case Stone::jiang:
+        return jiangCanMove(moveId, row, col, killId);
+        break;
+    case Stone::shi:
+        return shiCanMove(moveId, row, col, killId);
+        break;
+    case Stone::xiang:
+        return xiangCanMove(moveId, row, col, killId);
+        break;
+    case Stone::ma:
+        return maCanMove(moveId, row, col, killId);
+        break;
+    case Stone::che:
+        return cheCanMove(moveId, row, col, killId);
+        break;
+    case Stone::pao:
+        return paoCanMove(moveId, row, col, killId);
+        break;
+    case Stone::bing:
+        return bingCanMove(moveId, row, col, killId);
+        break;
+    }
+    return true;
+}
+
+bool Board::jiangCanMove(int moveId, int row, int col, int killId)
+{
+    if(col<3 || col>5)
+    {
+        return false;
+    }
+    if(mStones[moveId].mIsRed)
+    {
+        if(row>2)
+        {
+            return false;
+        }
+    }
+    else
+    {
+        if(row<7)
+        {
+            return false;
+        }
+    }
+
+    //步长
+    int d = abs(mStones[moveId].mColumn - col)*1 + abs(mStones[moveId].mRow - row)*10;
+    if(d == 1 || d == 10)
+    {
+        return true;
+    }
+    return false;
+}
+
+bool Board::shiCanMove(int moveId, int row, int col, int killId)
+{
+    if(col<3 || col>5)
+    {
+        return false;
+    }
+    if(mStones[moveId].mIsRed)
+    {
+        if(row>2)
+        {
+            return false;
+        }
+    }
+    else
+    {
+        if(row<7)
+        {
+            return false;
+        }
+    }
+
+    //步长
+    int d = abs(mStones[moveId].mColumn - col)*1 + abs(mStones[moveId].mRow - row)*10;
+    if(d == 11)
+    {
+        return true;
+    }
+    return false;
+}
+
+bool Board::exitStoneOnthePosition(int row, int col)
+{
+    for(int i=0; i<32; ++i)
+    {
+        if( !mStones[i].mIsDead && mStones[i].mColumn == col && mStones[i].mRow == row)  //正好点击到了棋盘内的一颗棋子
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Board::xiangCanMove(int moveId, int row, int col, int killId)
+{
+    if(!(col == 0 ||col == 2 || col == 4 || col == 6 || col == 8))
+    {
+        return false;
+    }
+    if(mStones[moveId].mIsRed)
+    {
+        if(!(row == 0 || row == 2 || row == 4))
+        {
+            return false;
+        }
+    }
+    else
+    {
+        if(!(row == 9 || row == 7 || row == 5))
+        {
+            return false;
+        }
+    }
+
+    //判断是否有其他棋子蹩脚
+    if(exitStoneOnthePosition((mStones[moveId].mRow + row)/2, (mStones[moveId].mColumn + col)/2))
+    {
+        return false;
+    }
+
+    //步长
+    int d = abs(mStones[moveId].mColumn - col)*1 + abs(mStones[moveId].mRow - row)*10;
+    if(d == 22)
+    {
+        return true;
+    }
+    return false;
+}
+
+bool Board::maCanMove(int moveId, int row, int col, int killId)
+{
+    return false;
+}
+
+bool Board::cheCanMove(int moveId, int row, int col, int killId)
+{
+    return false;
+}
+
+bool Board::paoCanMove(int moveId, int row, int col, int killId)
+{
+    return false;
+}
+
+bool Board::bingCanMove(int moveId, int row, int col, int killId)
+{
+    return false;
 }
