@@ -348,6 +348,37 @@ bool Board::maCanMove(int moveId, int row, int col, int killId)
 
 bool Board::cheCanMove(int moveId, int row, int col, int killId)
 {
+    if((mStones[moveId].mColumn == col && mStones[moveId].mRow == row) || (mStones[moveId].mColumn != col && mStones[moveId].mRow != row))   //走棋的起点和终点不在一条直线上
+    {
+        return false;
+    }
+    //走棋距离d
+    bool flagRow = mStones[moveId].mRow == row;
+    if(flagRow)
+    {
+#define GO_COL
+    }
+    int d = flagRow ? abs(mStones[moveId].mColumn-col):abs(mStones[moveId].mRow-row);
+
+    //如果走棋的起点和终点之间有棋子挡住，直接返回
+#ifdef GO_COL
+    for(int i=0; i<32; i++)
+    {
+        if(i!=moveId && i!=killId && !mStones[i].mIsDead && mStones[i].mColumn == col)
+        {
+            return false;
+        }
+    }
+#endif
+#ifndef GO_COL
+    for(int i=0; i<32; i++)
+    {
+        if(!mStones[i].mIsDead && mStones[i].mRow == row)
+        {
+            return false;
+        }
+    }
+#endif
     return false;
 }
 
