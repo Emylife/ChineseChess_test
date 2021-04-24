@@ -326,27 +326,52 @@ bool Board::xiangCanMove(int moveId, int row, int col, int killId)
         }
     }
 
-    //判断是否有其他棋子蹩脚
-    if(exitStoneOnthePosition((mStones[moveId].mRow + row)/2, (mStones[moveId].mColumn + col)/2))
+    //步长
+    int d = abs(mStones[moveId].mColumn - col)*1 + abs(mStones[moveId].mRow - row)*10;
+    if(d != 22)
     {
         return false;
     }
 
+    //判断是否有其他棋子蹩脚
+    if(!exitStoneOnthePosition((mStones[moveId].mRow + row)/2, (mStones[moveId].mColumn + col)/2))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+bool Board::maCanMove(int moveId, int row, int col, int killId)
+{
     //步长
     int d = abs(mStones[moveId].mColumn - col)*1 + abs(mStones[moveId].mRow - row)*10;
-    if(d == 22)
+    if(d != 21 && d != 12)
+    {
+        return false;
+    }
+
+    //确定蹩脚点的坐标
+    int roadBlockCol = -1;
+    int roadBlockRow = -1;
+    if(abs(mStones[moveId].mColumn - col) == 2)
+    {
+        roadBlockRow = mStones[moveId].mRow;
+        roadBlockCol = mStones[moveId].mColumn + (mStones[moveId].mColumn - col < 0 ? 1:-1);
+    }
+    else
+    {
+        roadBlockCol = mStones[moveId].mColumn;
+        roadBlockRow = mStones[moveId].mRow + (mStones[moveId].mRow - row < 0 ? 1:-1);
+    }
+    if(!exitStoneOnthePosition(roadBlockRow,roadBlockCol))
     {
         return true;
     }
     return false;
 }
 
-bool Board::maCanMove(int moveId, int row, int col, int killId)
-{
-    return false;
-}
-
-bool Board::canMoveInLine(int moveId, int row, int col, int killId)
+bool Board::cheCanMoveInLine(int moveId, int row, int col, int killId)
 {
     bool flagRow = mStones[moveId].mRow == row;
     int min = -1;
@@ -391,7 +416,57 @@ bool Board::cheCanMove(int moveId, int row, int col, int killId)
     {
         return false;
     }
-    if(canMoveInLine(moveId,row,col,killId))  //判断是否可以走直线
+    if(cheCanMoveInLine(moveId,row,col,killId))  //如果直线上没有其他棋子挡住，那么可以走直线
+    {
+        return true;
+    }
+    return false;
+}
+
+bool Board::paoCanMoveInLine(int moveId, int row, int col, int killId)
+{
+    bool flagRow = mStones[moveId].mRow == row;
+    int min = -1;
+    int max = -1;
+    if(flagRow)
+    {
+        min = mStones[moveId].mColumn < col ? mStones[moveId].mColumn:col;
+        max = mStones[moveId].mColumn > col ? mStones[moveId].mColumn:col;
+    }
+    else
+    {
+        min = mStones[moveId].mRow < row ? mStones[moveId].mRow:row;
+        max = mStones[moveId].mRow > row ? mStones[moveId].mRow:row;
+    }
+    //如果走棋的起点和终点之间有棋子挡住，直接返回false
+    int roadBlockNum = 0;  //记录有多少颗棋子挡住了走起的路线
+    if(flagRow)
+    {
+        for(int i=0; i<32; i++)
+        {
+            if(mStones[i].mRow == row && !mStones[i].mIsDead && mStones[i].mColumn < max && mStones[i].mColumn > min)
+            {
+                roadBlockNum++;
+                continue;
+            }
+        }
+    }
+    else
+    {
+        for(int i=0; i<32; i++)
+        {
+            if(mStones[i].mColumn == col && !mStones[i].mIsDead && mStones[i].mRow < max && mStones[i].mRow > min)
+            {
+                roadBlockNum++;
+                continue;
+            }
+        }
+    }
+    if(killId < 32 && roadBlockNum == 1)  //killId小于32情况：炮吃掉killId这个棋子，但是要判断是否符合炮走起的规则，即moveId和killId之间只有1个其他棋子
+    {
+        return true;
+    }
+    else if(killId >= 32 && roadBlockNum == 0)
     {
         return true;
     }
@@ -400,10 +475,58 @@ bool Board::cheCanMove(int moveId, int row, int col, int killId)
 
 bool Board::paoCanMove(int moveId, int row, int col, int killId)
 {
+    if((mStones[moveId].mColumn == col && mStones[moveId].mRow == row) || (mStones[moveId].mColumn != col && mStones[moveId].mRow != row))   //走棋的起点和终点不在一条直线上
+    {
+        return false;
+    }
+    if(paoCanMoveInLine(moveId,row,col,killId))
+    {
+        return true;
+    }
     return false;
 }
 
 bool Board::bingCanMove(int moveId, int row, int col, int killId)
 {
+    //步长
+    int d = abs(mStones[moveId].mColumn - col)*1 + abs(mStones[moveId].mRow - row)*10;
+    if(d != 1 && d != 10)
+    {
+        return false;
+    }
+    if(mStones[moveId].mIsRed)
+    {
+        if(mStones[moveId].mRow < 5) //兵还没过河
+        {
+            if(mStones[moveId].mRow+1 == row)
+            {
+                return true;
+            }
+        }
+        else
+        {
+            if(mStones[moveId].mRow <= row)
+            {
+                return true;
+            }
+        }
+    }
+    else
+    {
+        if(mStones[moveId].mRow > 4)  //兵没过河
+        {
+            if(mStones[moveId].mRow-1 == row)
+            {
+                return true;
+            }
+        }
+        else
+        {
+            if(mStones[moveId].mRow >= row)
+            {
+                return true;
+            }
+        }
+    }
     return false;
 }
