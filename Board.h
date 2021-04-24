@@ -26,6 +26,7 @@ public:
     bool paoCanMove(int moveId, int row, int col, int killId);
     bool bingCanMove(int moveId, int row, int col, int killId);
     bool exitStoneOnthePosition(int row, int col);
+    bool canMoveInLine(int moveId, int row, int col, int killId);
 private:
     Stone mStones[32];
     int d;

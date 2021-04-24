@@ -346,39 +346,55 @@ bool Board::maCanMove(int moveId, int row, int col, int killId)
     return false;
 }
 
+bool Board::canMoveInLine(int moveId, int row, int col, int killId)
+{
+    bool flagRow = mStones[moveId].mRow == row;
+    int min = -1;
+    int max = -1;
+    if(flagRow)
+    {
+        min = mStones[moveId].mColumn < col ? mStones[moveId].mColumn:col;
+        max = mStones[moveId].mColumn > col ? mStones[moveId].mColumn:col;
+    }
+    else
+    {
+        min = mStones[moveId].mRow < row ? mStones[moveId].mRow:row;
+        max = mStones[moveId].mRow > row ? mStones[moveId].mRow:row;
+    }
+    //如果走棋的起点和终点之间有棋子挡住，直接返回false
+    if(flagRow)
+    {
+        for(int i=0; i<32; i++)
+        {
+            if(mStones[i].mRow == row && !mStones[i].mIsDead && mStones[i].mColumn < max && mStones[i].mColumn > min)
+            {
+                return false;
+            }
+        }
+    }
+    else
+    {
+        for(int i=0; i<32; i++)
+        {
+            if(mStones[i].mColumn == col && !mStones[i].mIsDead && mStones[i].mRow < max && mStones[i].mRow > min)
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 bool Board::cheCanMove(int moveId, int row, int col, int killId)
 {
     if((mStones[moveId].mColumn == col && mStones[moveId].mRow == row) || (mStones[moveId].mColumn != col && mStones[moveId].mRow != row))   //走棋的起点和终点不在一条直线上
     {
         return false;
     }
-    //走棋距离d
-    bool flagRow = mStones[moveId].mRow == row;
-    if(flagRow)
+    if(canMoveInLine(moveId,row,col,killId))  //判断是否可以走直线
     {
-#define GO_COL
+        return true;
     }
-    int d = flagRow ? abs(mStones[moveId].mColumn-col):abs(mStones[moveId].mRow-row);
-
-    //如果走棋的起点和终点之间有棋子挡住，直接返回
-#ifdef GO_COL
-    for(int i=0; i<32; i++)
-    {
-        if(i!=moveId && i!=killId && !mStones[i].mIsDead && mStones[i].mColumn == col)
-        {
-            return false;
-        }
-    }
-#endif
-#ifndef GO_COL
-    for(int i=0; i<32; i++)
-    {
-        if(!mStones[i].mIsDead && mStones[i].mRow == row)
-        {
-            return false;
-        }
-    }
-#endif
     return false;
 }
 
